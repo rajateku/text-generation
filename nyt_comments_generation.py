@@ -96,6 +96,7 @@ def create_model(max_sequence_len, total_words):
 
     model.compile(loss='categorical_crossentropy', optimizer='adam')
 
+
     return model
 
 

@@ -1,31 +1,20 @@
 # keras module for building LSTM
 from keras.preprocessing.sequence import pad_sequences
-from keras.layers import Embedding, LSTM, Dense, Dropout
 from keras.preprocessing.text import Tokenizer
-from keras.callbacks import EarlyStopping
-from keras.models import Sequential
-import keras.utils as ku
-
 # set seeds for reproducability
 from tensorflow import set_random_seed
 from numpy.random import seed
-set_random_seed(2)
-seed(1)
+set_random_seed(23)
+seed(122)
 
 import pandas as pd
-import numpy as np
 import string, os
-import tensorflow
-import numpy.core.multiarray
-
 import warnings
+import generation_of_text
 warnings.filterwarnings("ignore")
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-
-
 curr_dir = '/home/user/Desktop/downs/nyt-comments/'
-
 
 all_headlines = []
 for filename in os.listdir(curr_dir):
@@ -37,7 +26,6 @@ for filename in os.listdir(curr_dir):
 all_headlines = [h for h in all_headlines if h != "Unknown"]
 len(all_headlines)
 
-
 def clean_text(txt):
     txt = "".join(v for v in txt if v not in string.punctuation).lower()
     txt = txt.encode("utf8").decode("ascii",'ignore')
@@ -47,7 +35,6 @@ corpus = [clean_text(x) for x in all_headlines]
 print(corpus[:10])
 
 tokenizer = Tokenizer()
-
 
 def get_sequence_of_tokens(corpus):
     ## tokenization
@@ -67,44 +54,15 @@ def get_sequence_of_tokens(corpus):
 inp_sequences, total_words = get_sequence_of_tokens(corpus)
 print(inp_sequences[:10])
 
-
-def generate_padded_sequences(input_sequences):
-    max_sequence_len = max([len(x) for x in input_sequences])
-    input_sequences = np.array(pad_sequences(input_sequences, maxlen=max_sequence_len, padding='pre'))
-
-    predictors, label = input_sequences[:, :-1], input_sequences[:, -1]
-    label = ku.to_categorical(label, num_classes=total_words)
-    return predictors, label, max_sequence_len
-
-
-predictors, label, max_sequence_len = generate_padded_sequences(inp_sequences)
+predictors, label, max_sequence_len = generation_of_text.generate_padded_sequences(inp_sequences, total_words)
 print(predictors, label, max_sequence_len)
 
-def create_model(max_sequence_len, total_words):
-    input_len = max_sequence_len - 1
-    model = Sequential()
 
-    # Add Input Embedding Layer
-    model.add(Embedding(total_words, 10, input_length=input_len))
-
-    # Add Hidden Layer 1 - LSTM Layer
-    model.add(LSTM(100))
-    model.add(Dropout(0.1))
-
-    # Add Output Layer
-    model.add(Dense(total_words, activation='softmax'))
-
-    model.compile(loss='categorical_crossentropy', optimizer='adam')
-
-
-    return model
-
-
-# model = create_model(max_sequence_len, total_words)
+# model = generation_of_text.create_model(max_sequence_len, total_words)
 # model.summary()
 #
 # model.fit(predictors, label, epochs=100, verbose=5)
-# model.save_weights('checkpoints/29-may-2019')
+# model.save_weights('checkpoints/4-june-2019')
 
 
 def generate_text(seed_text, next_words, model, max_sequence_len):
@@ -124,10 +82,9 @@ def generate_text(seed_text, next_words, model, max_sequence_len):
 
 
 # Restore the weights
-model = create_model(max_sequence_len, total_words)
-model.load_weights('checkpoints/29-may-2019')
+model = generation_of_text.create_model(max_sequence_len, total_words)
+model.load_weights('checkpoints/4-june-2019')
 
 
-generate_text("whats", 18, model=model, max_sequence_len=24)
-
+generate_text("this", 18, model=model, max_sequence_len=24)
 
